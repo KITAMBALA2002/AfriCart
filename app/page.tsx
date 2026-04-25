@@ -1,3 +1,4 @@
+import Link from "next/link";
 export default function Home() {
   const categories = [
     { name: "Agriculture", icon: "🌿", color: "bg-green-50" },
@@ -21,7 +22,7 @@ export default function Home() {
     <main className="min-h-screen bg-stone-50 text-gray-900">
       {/* Top Bar */}
       <div className="bg-green-950 text-white text-sm px-6 py-3 flex justify-between">
-        <p className="tracking-wide">🌍 Built for Africa. By Africa.</p>
+        <p className="tracking-wide">Built for Africa. By Africa.</p>
 
         <div className="hidden md:flex gap-6">
           <span className="hover:text-yellow-300 cursor-pointer transition">
@@ -76,7 +77,7 @@ export default function Home() {
         <button className="bg-green-900 text-white px-5 py-2 rounded-xl hover:bg-green-950 transition">
           ☰ All Categories
         </button>
-        <a href="#" className="hover:text-orange-500">Deals</a>
+        <Link href="/products">Deals</Link>
         <a href="#" className="hover:text-orange-500">Brands</a>
         <a href="#" className="hover:text-orange-500">Forum</a>
         <a href="#" className="hover:text-orange-500">Learn Hub</a>
@@ -92,10 +93,15 @@ export default function Home() {
             </p>
 
             <h2 className="text-5xl md:text-6xl font-black leading-tight mb-6">
-              Buy Local. <br />
-              Sell Local. <br />
-              <span className="text-orange-500">Grow Together.</span>
+              Buy Local.<br />
+              Sell Local.
+              <h3 className="text-2xl md:text-3xl font-bold text-orange-500">
+                Grow Together.
+              </h3>
+              
             </h2>
+            
+            
 
             <p className="text-lg text-gray-700 mb-8 max-w-xl">
               Built for African commerce with trusted sellers, mobile money,
@@ -114,18 +120,24 @@ export default function Home() {
             </div>
 
             <div className="flex flex-wrap gap-4">
-              <button className="bg-orange-500 text-white px-8 py-3 rounded-xl hover:bg-orange-600 hover:scale-105 transition shadow-md">
+              <Link
+                href="/products"
+                className="bg-orange-500 text-white px-8 py-3 rounded-xl hover:bg-orange-600 transition shadow-md"
+              >
                 Shop Now
-              </button>
+              </Link>
 
-              <button className="bg-green-900 text-white px-8 py-3 rounded-xl hover:bg-green-950 hover:scale-105 transition shadow-md">
+              <Link
+                href="/seller"
+                className="bg-green-900 text-white px-8 py-3 rounded-xl hover:bg-green-950 transition shadow-md"
+              >
                 Sell on AfriCart
-              </button>
+              </Link>
             </div>
           </div>
 
-          <div className="bg-green-900 rounded-[32px] h-[460px] flex items-center justify-center shadow-2xl hover:scale-[1.02] transition duration-500">
-            <div className="text-[190px] drop-shadow-xl">🌍</div>
+          <div className="bg-green-900 rounded-[32px] h-[460px] relative overflow-hidden shadow-2xl hover:scale-[1.02] transition duration-500">
+            <img src="/hero.jpg" alt="AfriCart Marketplace" className="w-full h-full object-cover" />
           </div>
         </div>
       </section>

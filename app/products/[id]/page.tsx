@@ -1,5 +1,7 @@
-export const dynamic = "force-dynamic";
+
 import { supabase } from "@/lib/supabase";
+import AddToCartButton from "./AddToCartButton";
+import BuyNowButton from "./BuyNowButton";
 
 export default async function ProductDetail({
   params,
@@ -89,13 +91,8 @@ export default async function ProductDetail({
           </div>
 
           <div className="flex gap-4">
-            <button className="bg-orange-500 text-white px-8 py-4 rounded-2xl hover:bg-orange-600 transition">
-              Add to Cart
-            </button>
-
-            <button className="bg-green-900 text-white px-8 py-4 rounded-2xl hover:bg-green-950 transition">
-              Buy Now
-            </button>
+            <AddToCartButton product={product} />
+            <BuyNowButton product={product} />
           </div>
 
           <p className="text-sm text-gray-500 mt-6">
