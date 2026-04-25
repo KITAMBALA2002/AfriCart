@@ -1,4 +1,5 @@
 import Link from "next/link";
+
 export default function Home() {
   const categories = [
     { name: "Agriculture", icon: "🌿", color: "bg-green-50" },
@@ -59,9 +60,12 @@ export default function Home() {
             <a href="#" className="hover:text-orange-500 transition">
               🏪 Sell
             </a>
-            <a href="#" className="hover:text-orange-500 transition">
+            <Link
+              href="/login"
+              className="hover:text-orange-500 transition"
+            >
               👤 Login
-            </a>
+            </Link>
             <a
               href="#"
               className="text-xl hover:scale-110 transition inline-block"
