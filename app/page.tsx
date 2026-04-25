@@ -137,7 +137,7 @@ export default function Home() {
           </div>
 
           <div className="bg-green-900 rounded-[32px] h-[460px] relative overflow-hidden shadow-2xl hover:scale-[1.02] transition duration-500">
-            <img src="/hero.jpg" alt="AfriCart Marketplace" className="w-full h-full object-cover" />
+            <img src="/home.png" alt="AfriCart Marketplace" className="w-full h-full object-cover" />
           </div>
         </div>
       </section>
