@@ -1,34 +1,83 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCart, saveCart } from "@/lib/cart";
+import { supabase } from "@/lib/supabase";
 
 export default function CartPage() {
   const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setItems(getCart());
+    loadCart();
   }, []);
 
-  const updateQty = (id: number, change: number) => {
-    const updated = items
-      .map((item) =>
-        item.id === id
-          ? { ...item, qty: item.qty + change }
-          : item
-      )
-      .filter((item) => item.qty > 0);
+  const loadCart = async () => {
+    setLoading(true);
 
-    setItems(updated);
-    saveCart(updated);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const user = session?.user;
+
+    if (!user) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+
+    const { data: cartRows } = await supabase
+      .from("cart_items")
+      .select("*")
+      .eq("user_id", user.id);
+
+    if (!cartRows || cartRows.length === 0) {
+      setItems([]);
+      setLoading(false);
+      return;
+    }
+
+    const ids = cartRows.map((r) => r.product_id);
+
+    const { data: products } = await supabase
+      .from("products")
+      .select("*")
+      .in("id", ids);
+
+    const merged = cartRows.map((row) => {
+      const product = products?.find(
+        (p) => p.id === row.product_id
+      );
+
+      return {
+        cart_id: row.id,
+        qty: row.quantity,
+        ...product,
+      };
+    });
+
+    setItems(merged);
+    setLoading(false);
   };
 
-  const removeItem = (id: number) => {
-    const updated = items.filter(
-      (item) => item.id !== id
-    );
-    setItems(updated);
-    saveCart(updated);
+  const updateQty = async (id:number, qty:number) => {
+    if (qty <= 0) return removeItem(id);
+
+    await supabase
+      .from("cart_items")
+      .update({ quantity: qty })
+      .eq("id", id);
+
+    loadCart();
+  };
+
+  const removeItem = async (id:number) => {
+    await supabase
+      .from("cart_items")
+      .delete()
+      .eq("id", id);
+
+    loadCart();
   };
 
   const total = items.reduce(
@@ -37,72 +86,79 @@ export default function CartPage() {
   );
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-stone-50 to-orange-50 text-gray-900">
+    <main className="min-h-screen bg-gradient-to-b from-green-50 via-white to-orange-50 pb-28">
+      
       {/* Header */}
-      <section className="px-6 py-10 border-b bg-white/70 backdrop-blur">
-        <div className="max-w-6xl mx-auto">
-          <p className="text-orange-500 font-semibold">
-            Secure Checkout Ready
-          </p>
-          <h1 className="text-5xl font-black mt-2">
-            Your Cart
-          </h1>
-          <p className="text-gray-500 mt-2">
-            Review your selected African products.
-          </p>
-        </div>
+      <section className="bg-green-900 text-white px-4 py-6 shadow-md">
+        <h1 className="text-3xl md:text-5xl font-black">
+          Your Cart
+        </h1>
+        <p className="text-green-100 mt-1">
+          Ready for checkout
+        </p>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 py-10 grid lg:grid-cols-3 gap-8">
+      <section className="max-w-6xl mx-auto px-4 py-6 grid lg:grid-cols-3 gap-6">
+
         {/* Items */}
-        <div className="lg:col-span-2 space-y-5">
-          {items.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 shadow-sm text-center">
-              <p className="text-2xl font-bold">
-                Your cart is empty
-              </p>
+        <div className="lg:col-span-2 space-y-4">
+
+          {loading && (
+            <div className="bg-white rounded-3xl p-6 shadow">
+              Loading...
+            </div>
+          )}
+
+          {!loading && items.length === 0 && (
+            <div className="bg-black rounded-3xl p-10 text-center shadow">
+              <div className="text-5xl">🛒</div>
+              <h2 className="text-2xl font-black mt-4">
+                Cart is empty
+              </h2>
               <p className="text-gray-500 mt-2">
                 Add products to continue shopping.
               </p>
             </div>
-          ) : (
-            items.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-3xl shadow-sm p-5 flex gap-5 items-center"
-              >
+          )}
+
+          {items.map((item) => (
+            <div
+              key={item.cart_id}
+              className="bg-white rounded-3xl p-4 shadow-md border border-stone-100"
+            >
+              <div className="flex gap-4">
                 <img
                   src={item.image_url}
                   alt={item.name}
-                  className="w-28 h-28 rounded-2xl object-cover"
+                  className="w-24 h-24 rounded-2xl object-cover"
                 />
 
-                <div className="flex-1">
-                  <h2 className="font-bold text-xl">
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-black text-lg leading-tight">
                     {item.name}
                   </h2>
 
-                  <p className="text-gray-500 text-sm mt-1">
-                    ${item.price} each
+                  <p className="text-orange-500 font-black text-xl mt-1">
+                    ${item.price}
                   </p>
 
-                  <div className="flex items-center gap-3 mt-4">
+                  <div className="flex items-center gap-2 mt-4">
                     <button
                       onClick={() =>
-                        updateQty(item.id, -1)
+                        updateQty(item.cart_id, item.qty - 1)
                       }
                       className="w-10 h-10 rounded-xl bg-stone-100 text-lg"
                     >
                       −
                     </button>
 
-                    <span className="font-bold text-lg min-w-[24px] text-center">
+                    <span className="font-bold w-8 text-center">
                       {item.qty}
                     </span>
 
                     <button
                       onClick={() =>
-                        updateQty(item.id, 1)
+                        updateQty(item.cart_id, item.qty + 1)
                       }
                       className="w-10 h-10 rounded-xl bg-stone-100 text-lg"
                     >
@@ -110,64 +166,73 @@ export default function CartPage() {
                     </button>
                   </div>
                 </div>
-
-                <div className="text-right">
-                  <p className="font-black text-2xl text-orange-500">
-                    $
-                    {item.price * item.qty}
-                  </p>
-
-                  <button
-                    onClick={() =>
-                      removeItem(item.id)
-                    }
-                    className="text-red-500 text-sm mt-3"
-                  >
-                    Remove
-                  </button>
-                </div>
               </div>
-            ))
-          )}
+
+              <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                <p className="font-black text-lg">
+                  ${item.price * item.qty}
+                </p>
+
+                <button
+                  onClick={() =>
+                    removeItem(item.cart_id)
+                  }
+                  className="text-red-500 text-sm font-semibold"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Summary */}
-        <div className="h-fit sticky top-6">
-          <div className="bg-white rounded-3xl shadow-sm p-7">
+        {/* Desktop Summary */}
+        <div className="hidden lg:block">
+          <div className="bg-white rounded-3xl p-6 shadow-xl sticky top-6">
             <h3 className="text-2xl font-black">
-              Order Summary
+              Summary
             </h3>
 
-            <div className="mt-6 space-y-3 text-gray-600">
+            <div className="mt-5 space-y-3">
               <div className="flex justify-between">
                 <span>Items</span>
                 <span>{items.length}</span>
               </div>
 
-              <div className="flex justify-between">
-                <span>Delivery</span>
-                <span>Calculated at checkout</span>
-              </div>
-
-              <div className="border-t pt-4 flex justify-between text-2xl font-black text-gray-900">
+              <div className="flex justify-between text-2xl font-black pt-4 border-t">
                 <span>Total</span>
                 <span>${total}</span>
               </div>
             </div>
+
             <a href="/checkout">
-              <button className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-bold transition">
-                Proceed to Checkout
+              <button className="w-full mt-6 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-2xl font-black">
+                Checkout
               </button>
             </a>
-
-            <div className="mt-5 text-sm text-gray-500 space-y-2">
-              <p>✓ Secure payments</p>
-              <p>✓ Trusted African sellers</p>
-              <p>✓ Fast regional delivery</p>
-            </div>
           </div>
         </div>
       </section>
+
+      {/* Mobile Sticky Checkout */}
+      {items.length > 0 && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-2xl px-4 py-3 flex items-center justify-between">
+          <div>
+            <p className="text-sm text-gray-500">
+              Total
+            </p>
+            <p className="text-2xl font-black">
+              ${total}
+            </p>
+          </div>
+
+          <a href="/checkout">
+            <button className="bg-orange-500 text-white px-6 py-3 rounded-2xl font-black">
+              Checkout
+            </button>
+          </a>
+        </div>
+      )}
     </main>
   );
 }

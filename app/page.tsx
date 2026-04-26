@@ -1,6 +1,48 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function Home() {
+  const [user, setUser] = useState<any>(null);
+  const [role, setRole] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
+    setLoading(true);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setUser(null);
+      setRole("");
+      setLoading(false);
+      return;
+    }
+
+    setUser(user);
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    setRole(profile?.role || "buyer");
+    setLoading(false);
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    location.reload();
+  };
   const categories = [
     { name: "Agriculture", icon: "🌿", color: "bg-green-50" },
     { name: "Fashion", icon: "👗", color: "bg-orange-50" },
@@ -56,22 +98,77 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="flex gap-6 font-medium items-center">
-            <a href="#" className="hover:text-orange-500 transition">
-              🏪 Sell
-            </a>
-            <Link
-              href="/login"
-              className="hover:text-orange-500 transition"
-            >
-              👤 Login
-            </Link>
-            <a
-              href="#"
-              className="text-xl hover:scale-110 transition inline-block"
-            >
-              🛒
-            </a>
+          <div className="flex gap-4 font-medium items-center flex-wrap">
+
+            {loading && (
+              <span className="text-gray-400">
+                Loading...
+              </span>
+            )}
+
+            {!loading && !user && (
+              <>
+                <Link href="/login" className="hover:text-orange-500">
+                  👤 Login
+                </Link>
+
+                <Link
+                  href="/signup"
+                  className="bg-orange-500 text-white px-5 py-2 rounded-xl"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+
+            {!loading && user && role === "buyer" && (
+              <>
+                <Link href="/cart" className="text-xl">
+                  🛒
+                </Link>
+
+                <button
+                  onClick={logout}
+                  className="bg-gray-200 px-4 py-2 rounded-xl"
+                >
+                  Logout
+                </button>
+              </>
+            )}
+
+            {!loading && user && role === "seller" && (
+              <>
+                <Link href="/seller">
+                  🏪 Dashboard
+                </Link>
+
+                <Link href="/cart" className="text-xl">
+                  🛒
+                </Link>
+
+                <button
+                  onClick={logout}
+                  className="bg-gray-200 px-4 py-2 rounded-xl"
+                >
+                  Logout
+                </button>
+              </>
+            )}
+
+            {!loading && user && role === "admin" && (
+              <>
+                <Link href="/admin/orders">
+                  ⚙️ Admin
+                </Link>
+
+                <button
+                  onClick={logout}
+                  className="bg-gray-200 px-4 py-2 rounded-xl"
+                >
+                  Logout
+                </button>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -96,16 +193,14 @@ export default function Home() {
               Africa’s Marketplace
             </p>
 
-            <h2 className="text-5xl md:text-6xl font-black leading-tight mb-6">
+            <h2 className="text-5xl md:text-6xl font-black leading-tight">
               Buy Local.<br />
               Sell Local.
-              <h3 className="text-2xl md:text-3xl font-bold text-orange-500">
-                Grow Together.
-              </h3>
-              
             </h2>
-            
-            
+
+            <h3 className="text-2xl md:text-3xl font-bold text-orange-500 mt-3">
+              Grow Together.
+            </h3>
 
             <p className="text-lg text-gray-700 mb-8 max-w-xl">
               Built for African commerce with trusted sellers, mobile money,
