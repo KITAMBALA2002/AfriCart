@@ -3,14 +3,20 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState("");
   const [loading, setLoading] = useState(true);
+  const [featured, setFeatured] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  
 
   useEffect(() => {
     checkUser();
+    loadFeatured();
   }, []);
 
   const checkUser = async () => {
@@ -42,6 +48,23 @@ export default function Home() {
   const logout = async () => {
     await supabase.auth.signOut();
     location.reload();
+  };
+  const handleSearch = () => {
+    if (!searchTerm.trim()) return;
+
+    router.push(
+      `/products?search=${encodeURIComponent(searchTerm)}`
+    );
+  };
+
+  const loadFeatured = async () => {
+  const { data } = await supabase
+    .from("products")
+    .select("*")
+    .order("id", { ascending: false })
+    .limit(4);
+
+    setFeatured(data || []);
   };
   const categories = [
     { name: "Agriculture", icon: "🌿", color: "bg-green-50" },
@@ -91,9 +114,18 @@ export default function Home() {
           <div className="flex-1 lg:max-w-2xl flex shadow-sm rounded-xl overflow-hidden">
             <input
               placeholder="Search products, brands and more..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSearch();
+              }}
               className="w-full px-4 py-3 outline-none"
             />
-            <button className="bg-orange-500 text-white px-6 hover:bg-orange-600 transition">
+
+            <button
+              onClick={handleSearch}
+              className="bg-orange-500 text-white px-6 hover:bg-orange-600 transition"
+            >
               🔍
             </button>
           </div>
@@ -240,7 +272,66 @@ export default function Home() {
           </div>
         </div>
       </section>
+      {/* Featured Products */}
+      <section className="px-6 py-16 bg-white">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <p className="text-orange-500 font-semibold">
+              HOT PICKS
+            </p>
 
+            <h3 className="text-3xl font-black">
+              Featured Products
+            </h3>
+          </div>
+
+          <Link
+            href="/products"
+            className="text-green-900 font-semibold hover:text-orange-500"
+          >
+            See All →
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+          {featured.map((item) => (
+            <Link
+              key={item.id}
+              href={`/products/${item.id}`}
+            >
+              <div className="bg-stone-50 rounded-2xl border border-stone-200 overflow-hidden hover:shadow-xl transition">
+
+                <div className="aspect-[4/3] bg-white">
+                  <img
+                    src={item.image_url}
+                    alt={item.name}
+                    className="w-full h-full object-contain p-3"
+                  />
+                </div>
+
+                <div className="p-4">
+                  <h4 className="font-bold line-clamp-2 min-h-[48px]">
+                    {item.name}
+                  </h4>
+
+                  <p className="text-sm text-gray-500 mt-1">
+                    {item.country}
+                  </p>
+
+                  <p className="text-orange-500 font-black text-xl mt-3">
+                    ${item.price}
+                  </p>
+
+                  <button className="w-full mt-4 bg-orange-500 text-white py-2 rounded-xl hover:bg-orange-600 transition">
+                    View Item
+                  </button>
+                </div>
+
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
       {/* Categories */}
       <section className="px-6 py-16 bg-white">
         <div className="flex justify-between items-center mb-8">

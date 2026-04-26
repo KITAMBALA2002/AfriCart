@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { useSearchParams } from "next/navigation";
 
 export default function ProductsPage() {
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<any[]>([]);
   const [filtered, setFiltered] = useState<any[]>([]);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(
+    searchParams.get("search") || ""
+  );
   const [country, setCountry] = useState("");
   const [category, setCategory] = useState("");
 
