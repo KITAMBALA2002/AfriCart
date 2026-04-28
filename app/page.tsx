@@ -214,7 +214,9 @@ export default function Home() {
         <a href="#" className="hover:text-orange-500">Brands</a>
         <a href="#" className="hover:text-orange-500">Forum</a>
         <a href="#" className="hover:text-orange-500">Learn Hub</a>
-        <a href="#" className="hover:text-orange-500">Become Seller</a>
+        <a href="/become-seller" className="hover:text-orange-500">
+          Become Seller
+        </a>
       </div>
 
       {/* Hero */}
