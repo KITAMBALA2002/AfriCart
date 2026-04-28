@@ -1,46 +1,37 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import Link from "next/link";
 import DeleteButton from "./delete-button";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function SellerDashboard() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<any[]>([]);
-  const [sellerName, setSellerName] = useState("Seller");
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
-    checkUser();
+    loadDashboard();
   }, []);
 
-  const checkUser = async () => {
+  const loadDashboard = async () => {
+    setLoading(true);
+
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const user = session?.user;
 
     if (!user) {
       router.push("/login");
       return;
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role,email")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role !== "seller") {
-      router.push("/become-seller");
-      return;
-    }
-
-    setSellerName(
-      profile?.email?.split("@")[0] || "Seller"
-    );
+    setUserId(user.id);
 
     const { data } = await supabase
       .from("products")
@@ -52,135 +43,103 @@ export default function SellerDashboard() {
     setLoading(false);
   };
 
-  const totalProducts = products.length;
-
-  if (loading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-stone-50">
-        Loading dashboard...
-      </main>
-    );
-  }
-
   return (
-    <main className="min-h-screen bg-stone-50 text-gray-900 pb-24">
+    <main className="min-h-screen bg-gradient-to-b from-stone-50 via-white to-green-50 pb-24">
+
       {/* Header */}
-      <section className="bg-green-950 text-white px-4 md:px-6 py-8 rounded-b-3xl shadow">
-        <p className="text-green-200 text-sm">
+      <section className="bg-gradient-to-r from-green-950 via-green-900 to-green-800 text-white px-5 py-7 rounded-b-3xl shadow-lg">
+        <p className="text-green-100 text-sm">
           Welcome back
         </p>
 
-        <h1 className="text-3xl md:text-5xl font-black mt-1">
-          {sellerName}
+        <h1 className="text-3xl md:text-4xl font-black mt-1">
+          Seller Dashboard
         </h1>
 
-        <p className="text-green-100 mt-2 text-sm md:text-base">
-          Manage your store and grow sales.
+        <p className="text-green-100 mt-1 text-sm">
+          Manage your store professionally
         </p>
       </section>
 
-      {/* Stats */}
-      <section className="px-4 md:px-6 -mt-6">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
-            <p className="text-gray-500 text-sm">
-              Products
-            </p>
+      {/* Top Row */}
+      <section className="px-4 mt-6 flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-black text-gray-900">
+            My Products
+          </h2>
 
-            <h2 className="text-3xl font-black mt-1">
-              {totalProducts}
-            </h2>
-          </div>
-
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
-            <p className="text-gray-500 text-sm">
-              Status
-            </p>
-
-            <h2 className="text-xl font-black mt-2 text-green-700">
-              Active
-            </h2>
-          </div>
+          <p className="text-sm text-gray-500 mt-1">
+            {products.length} items listed
+          </p>
         </div>
-      </section>
-
-      {/* Top Action */}
-      <section className="px-4 md:px-6 mt-6 flex justify-between items-center">
-        <h2 className="text-2xl font-black">
-          My Products
-        </h2>
 
         <Link
           href="/seller/add-product"
-          className="bg-orange-500 text-white px-4 py-2 rounded-xl font-bold text-sm"
+          className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-2xl font-bold shadow-md transition"
         >
           + Add
         </Link>
       </section>
 
-      {/* Products */}
-      <section className="px-4 md:px-6 mt-5">
-        {products.length === 0 ? (
-          <div className="bg-white rounded-3xl p-8 text-center shadow-sm">
-            <p className="text-gray-500">
-              No products yet.
-            </p>
+      {/* Grid */}
+      <section className="px-4 mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
 
-            <Link
-              href="/seller/add-product"
-              className="inline-block mt-4 bg-orange-500 text-white px-5 py-3 rounded-2xl font-bold"
-            >
-              Upload First Product
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-6">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="bg-white rounded-3xl shadow-sm overflow-hidden"
-              >
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="w-full h-28 md:h-52 object-cover"
-                />
+        {products.map((product) => (
+          <div
+            key={product.id}
+            className="bg-white rounded-3xl shadow-md hover:shadow-xl transition overflow-hidden border border-stone-100"
+          >
+            <div className="aspect-square bg-stone-100 overflow-hidden">
+              <img
+                src={product.image_url}
+                alt={product.name}
+                className="w-full h-full object-cover hover:scale-105 transition duration-300"
+              />
+            </div>
 
-                <div className="p-3 md:p-5">
-                  <h3 className="font-bold text-sm md:text-xl line-clamp-2 min-h-[40px]">
-                    {product.name}
-                  </h3>
+            <div className="p-4">
 
-                  <p className="text-orange-500 font-black text-lg md:text-2xl mt-2">
-                    ${product.price}
-                  </p>
+              <h3 className="font-bold text-gray-900 text-sm line-clamp-2 min-h-[42px]">
+                {product.name}
+              </h3>
 
-                  <div className="grid grid-cols-2 gap-2 mt-4">
-                    <a
-                      href={`/seller/edit/${product.id}`}
-                      className="bg-blue-500 text-white py-2 text-sm rounded-xl text-center"
-                    >
-                      Edit
-                    </a>
+              <p className="text-orange-500 font-black text-xl mt-3">
+                ${product.price}
+              </p>
 
-                    <DeleteButton
-                      id={product.id}
-                    />
-                  </div>
-                </div>
+              <div className="grid grid-cols-2 gap-2 mt-4">
+
+                <a
+                  href={`/seller/edit/${product.id}`}
+                  className="text-center bg-blue-50 text-blue-700 py-2 rounded-xl text-sm font-semibold hover:bg-blue-100 transition"
+                >
+                  Edit
+                </a>
+
+                <DeleteButton id={product.id} />
+
               </div>
-            ))}
+            </div>
           </div>
-        )}
+        ))}
+
       </section>
 
-      {/* Mobile Floating Add Button */}
-      <Link
-        href="/seller/add-product"
-        className="md:hidden fixed bottom-5 right-5 bg-orange-500 text-white w-14 h-14 rounded-full flex items-center justify-center text-3xl shadow-xl"
-      >
-        +
-      </Link>
+      {/* Empty */}
+      {products.length === 0 && (
+        <div className="text-center mt-16 px-4">
+          <div className="text-6xl">📦</div>
+
+          <h3 className="text-2xl font-black mt-4 text-gray-900">
+            No Products Yet
+          </h3>
+
+          <p className="text-gray-500 mt-2">
+            Add your first product and start selling.
+          </p>
+        </div>
+      )}
+
     </main>
   );
 }

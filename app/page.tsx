@@ -104,7 +104,7 @@ export default function Home() {
       </div>
 
       {/* Navbar */}
-      <nav className="bg-white/90 backdrop-blur sticky top-0 z-50 shadow-sm px-6 py-5">
+      <nav className="bg-white/90 backdrop-blur relative z-50 shadow-sm px-6 py-5">
         <div className="flex flex-col lg:flex-row gap-5 lg:items-center lg:justify-between">
           <h1 className="text-4xl font-black tracking-tight">
             <span className="text-orange-500">Afri</span>

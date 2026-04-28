@@ -4,6 +4,7 @@ import "./globals.css";
 
 import Navbar from "./components/TempNav";
 import FooterNav from "./components/FooterMenu";
+import LayoutShell from "./components/LayoutShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,23 +23,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable}`}
     >
-      <body className="min-h-full bg-stone-50 text-gray-900">
-        <Navbar />
-
-        <main className="pb-20">
+      <body className="bg-stone-50 text-gray-900">
+        <LayoutShell>
           {children}
-        </main>
-
-        <FooterNav />
+        </LayoutShell>
       </body>
     </html>
   );
