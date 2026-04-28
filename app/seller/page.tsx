@@ -1,11 +1,34 @@
 import { supabase } from "@/lib/supabase";
 import DeleteButton from "./delete-button";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default async function SellerDashboard() {
+  // Check logged in user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  // Check role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "seller") {
+    redirect("/become-seller");
+  }
+
+  // Only seller reaches here
   const { data: products } = await supabase
     .from("products")
     .select("*")
+    .eq("seller_id", user.id)
     .order("id", { ascending: false });
 
   return (
@@ -22,7 +45,6 @@ export default async function SellerDashboard() {
       </section>
 
       <section className="px-6 py-10 max-w-6xl mx-auto">
-        {/* Top Actions */}
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold">
             Your Products
@@ -36,7 +58,6 @@ export default async function SellerDashboard() {
           </Link>
         </div>
 
-        {/* Grid */}
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
           {products?.map((product) => (
             <div
@@ -78,6 +99,12 @@ export default async function SellerDashboard() {
             </div>
           ))}
         </div>
+
+        {products?.length === 0 && (
+          <p className="text-gray-500 mt-10">
+            No products yet.
+          </p>
+        )}
       </section>
     </main>
   );
