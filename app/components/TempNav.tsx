@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-export default function Navbar() {
+export default function navbar() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
