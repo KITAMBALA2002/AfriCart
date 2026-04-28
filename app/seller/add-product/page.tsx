@@ -50,65 +50,88 @@ export default function AddProductPage() {
   const [file, setFile] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
 
-    const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     setMsg("Uploading...");
 
     try {
+      // get logged in user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setMsg("Please login first");
+        return;
+      }
+
         let imageUrl = "";
 
-        // upload image first
+        // upload image
         if (file) {
-        const cleanName = file.name
+          const cleanName = file.name
             .replace(/\s+/g, "-")
             .replace(/[^a-zA-Z0-9.-]/g, "")
             .toLowerCase();
 
-        const fileName = `${Date.now()}-${cleanName}`;
+          const fileName = `${Date.now()}-${cleanName}`;
 
-        const { error: uploadError } =
+          const { error: uploadError } =
             await supabase.storage
-            .from("products")
-            .upload(fileName, file);
+              .from("products")
+              .upload(fileName, file);
 
-        if (uploadError) {
-            setMsg("Image upload failed: " + uploadError.message);
+          if (uploadError) {
+            setMsg(
+              "Image upload failed: " +
+                uploadError.message
+            );
             return;
-        }
+          }
 
-        const { data } = supabase.storage
+          const { data } = supabase.storage
             .from("products")
             .getPublicUrl(fileName);
 
-        imageUrl = data.publicUrl;
+          imageUrl = data.publicUrl;
         }
 
-        // insert product
-        const { data: inserted, error: insertError } =
-        await supabase
+        // save product with seller_id
+        const { error: insertError } =
+          await supabase
             .from("products")
             .insert([
-            {
+              {
                 name: form.name,
                 price: Number(form.price),
                 country: form.country,
                 category: form.category,
                 image_url: imageUrl,
-            },
-            ])
-            .select();
+                seller_id: user.id,
+              },
+            ]);
 
         if (insertError) {
-        setMsg("Save failed: " + insertError.message);
-        return;
+          setMsg(
+            "Save failed: " +
+              insertError.message
+          );
+          return;
         }
 
-        console.log(inserted);
         setMsg("Product added successfully");
-    } catch (err: any) {
+
+        setForm({
+          name: "",
+          price: "",
+          country: "",
+          category: "",
+        });
+
+        setFile(null);
+      } catch (err) {
         setMsg("Unexpected error");
-        console.log(err);
-    }
+      }
     };
 
   return (
