@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useSearchParams } from "next/navigation";
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams();
+
   const [products, setProducts] = useState<any[]>([]);
   const [filtered, setFiltered] = useState<any[]>([]);
 
   const [search, setSearch] = useState(
     searchParams.get("search") || ""
   );
+
   const [country, setCountry] = useState("");
   const [category, setCategory] = useState("");
 
@@ -151,7 +153,6 @@ export default function ProductsPage() {
             >
               <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition duration-300">
 
-                {/* Alibaba Style Image Frame */}
                 <div className="w-full aspect-[4/3] bg-white border-b border-stone-100 overflow-hidden">
                   <img
                     src={product.image_url}
@@ -160,7 +161,6 @@ export default function ProductsPage() {
                   />
                 </div>
 
-                {/* Info */}
                 <div className="p-4">
                   <h3 className="font-bold text-sm md:text-lg line-clamp-2 min-h-[44px]">
                     {product.name}
@@ -191,5 +191,13 @@ export default function ProductsPage() {
         )}
       </section>
     </main>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading products...</div>}>
+      <ProductsContent />
+    </Suspense>
   );
 }
